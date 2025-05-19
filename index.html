@@ -1,1 +1,124 @@
-<input type="date" name="date" />
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Current Month Calendar</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+  h1 {
+    text-align: center;
+  }
+  table {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    border-collapse: collapse;
+  }
+  th {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px;
+    text-align: center;
+  }
+  td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+    height: 80px;
+  }
+  .today {
+    background-color: #ffeb3b;
+  }
+</style>
+</head>
+<body>
+
+<h1 id="monthYear"></h1>
+<table id="calendar">
+  <thead>
+    <tr>
+      <th>Sun</th>
+      <th>Mon</th>
+      <th>Tue</th>
+      <th>Wed</th>
+      <th>Thu</th>
+      <th>Fri</th>
+      <th>Sat</th>
+    </tr>
+  </thead>
+  <tbody id="calendar-body">
+    <!-- Calendar dates will be generated here -->
+  </tbody>
+</table>
+
+<script>
+  function generateCalendar() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-11
+    const todayDate = now.getDate();
+
+    // Set the header with current month and year
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    document.getElementById('monthYear').textContent = `${monthNames[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1);
+    const startingDay = firstDay.getDay(); // 0-6, Sunday to Saturday
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const tbody = document.getElementById('calendar-body');
+    tbody.innerHTML = ''; // Clear previous cells if any
+
+    let date = 1;
+    // Generate up to 6 weeks (rows)
+    for (let week = 0; week < 6; week++) {
+      const row = document.createElement('tr');
+
+      // Generate 7 days (cells)
+      for (let day = 0; day < 7; day++) {
+        const cell = document.createElement('td');
+
+        // Calculate if this cell should have a date
+        if (week === 0 && day < startingDay) {
+          // Empty cells before the first day of month
+          cell.textContent = '';
+        } else if (date > daysInMonth) {
+          // Empty cells after the last day
+          cell.textContent = '';
+        } else {
+          cell.textContent = date;
+          
+          // Highlight today
+          if (date === todayDate) {
+            cell.classList.add('today');
+          }
+          
+          date++;
+        }
+        row.appendChild(cell);
+      }
+
+      tbody.appendChild(row);
+
+      // Stop creating rows if all dates are filled
+      if (date > daysInMonth) {
+        break;
+      }
+    }
+  }
+
+  // Generate the calendar on page load
+  window.onload = generateCalendar;
+</script>
+
+</body>
+</html>
