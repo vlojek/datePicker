@@ -1,17 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Date Picker</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Date Picker for Zendesk WebView</title>
 </head>
 <body>
-  <input type="date" id="datePicker" />
-  <script>
-    document.getElementById('datePicker').addEventListener('change', function() {
-      const selectedDate = this.value;
-      // Send the selected date back to Zendesk
-      window.parent.postMessage({ date: selectedDate }, '*');
-    });
-  </script>
+
+<label for="datePicker">Select a date:</label>
+<input type="date" id="datePicker" />
+
+<script>
+// Get today's date
+const today = new Date();
+
+// Format date as YYYY-MM-DD
+const year = today.getFullYear();
+const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+const day = String(today.getDate()).padStart(2, '0');
+
+const formattedDate = `${year}-${month}-${day}`;
+
+// Set the default value of the date picker to today
+const dateInput = document.getElementById('datePicker');
+dateInput.value = formattedDate;
+
+// Optionally, set focus to open the date picker immediately
+dateInput.focus();
+
+// Note: HTML5 date inputs typically open the date picker UI on focus or click.
+// To trigger it immediately, you might simulate a click:
+setTimeout(() => {
+    dateInput.showPicker && dateInput.showPicker(); // For browsers that support showPicker()
+    // Alternatively, simulate a click
+    // dateInput.click();
+}, 100);
+</script>
+
 </body>
 </html>
