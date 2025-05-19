@@ -1,31 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Date Picker with Current Month</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Date Picker - Current Month</title>
 </head>
 <body>
-  <h1>Select a Date</h1>
-  <input type="date" id="datePicker" />
 
-  <script>
-    // Get today's date
-    const today = new Date();
+<label for="datePicker">Choose a date:</label>
+<input type="date" id="datePicker" />
 
-    // Format date as YYYY-MM-DD
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    const day = String(today.getDate()).padStart(2, '0');
+<script>
+  // Set the input's default value to today's date in YYYY-MM-DD format
+  const dateInput = document.getElementById('datePicker');
 
-    const formattedDate = `${year}-${month}-${day}`;
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // months are 0-based
+  const day = String(today.getDate()).padStart(2, '0');
 
-    // Set the date input's value to today's date
-    const dateInput = document.getElementById('datePicker');
-    dateInput.value = formattedDate;
+  const todayString = `${year}-${month}-${day}`;
+  dateInput.value = todayString;
+</script>
 
-    // Optional: set min and max dates if needed
-    // dateInput.setAttribute('min', '2020-01-01');
-    // dateInput.setAttribute('max', '2030-12-31');
-  </script>
 </body>
 </html>
