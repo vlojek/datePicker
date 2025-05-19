@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Date Picker</title>
+</head>
+<body>
+  <input type="date" id="datePicker" />
+  <script>
+    document.getElementById('datePicker').addEventListener('change', function() {
+      const selectedDate = this.value;
+      // Send the selected date back to Zendesk
+      window.parent.postMessage({ date: selectedDate }, '*');
+    });
+  </script>
+</body>
+</html>
