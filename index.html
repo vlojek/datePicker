@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Simple Calendar - Only Coming Tuesday Enabled</title>
+<title>Simple Calendar - Next Week Tuesday Enabled if Today is Tuesday</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -83,15 +83,15 @@ background: #777;
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth(); // 0-11
 
-  // Calculate the coming Tuesday (next Tuesday >= today)
+  // Calculate the coming Tuesday (next Tuesday strictly after today)
   function getNextTuesday(startDate) {
     const date = new Date(startDate.getTime());
     const day = date.getDay();
     // Tuesday is 2 (Sun=0, Mon=1, Tue=2)
     let daysToAdd = (2 - day + 7) % 7;
+    // If today is Tuesday (daysToAdd=0), move to next week's Tuesday (add 7 days)
     if (daysToAdd === 0) {
-      // If today is Tuesday, keep today as coming Tuesday
-      daysToAdd = 0;
+      daysToAdd = 7;
     }
     date.setDate(date.getDate() + daysToAdd);
     return date;
