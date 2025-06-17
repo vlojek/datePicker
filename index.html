@@ -8,6 +8,7 @@
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 10px;
+    position: relative;
   }.calendar {
 display: grid;
 grid-template-columns: repeat(7, 1fr);
@@ -32,11 +33,48 @@ cursor: pointer;
 }/* Optional: hover effect for enabled days */
 .day.enabled:hover {
 background-color: #ddd;
+}/* Confirmation popup style */
+#confirmationPopup {
+position: fixed;
+bottom: 20px;
+left: 50%;
+transform: translateX(-50%);
+background-color: #333;
+color: white;
+padding: 10px 15px;
+border-radius: 6px;
+font-size: 0.9em;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease;
+z-index: 9999;
+display: flex;
+align-items: center;
+gap: 10px;
+}#confirmationPopup.show {
+opacity: 1;
+pointer-events: auto;
+}#confirmationPopup button {
+background: #555;
+color: white;
+border: none;
+border-radius: 4px;
+padding: 4px 8px;
+cursor: pointer;
+font-size: 0.85em;
+}#confirmationPopup button:hover {
+background: #777;
 }
 </style></head>
-<body><div id="calendarContainer"></div><script>
+<body><div id="calendarContainer"></div><!-- Confirmation popup --><div id="confirmationPopup">
+  <span id="confirmationMessage"></span>
+  <button id="closePopupBtn">OK</button>
+</div><script>
 (function() {
   const container = document.getElementById('calendarContainer');
+  const confirmationPopup = document.getElementById('confirmationPopup');
+  const confirmationMessage = document.getElementById('confirmationMessage');
+  const closePopupBtn = document.getElementById('closePopupBtn');
   let date = null; // variable to save selected date
 
   const today = new Date();
@@ -79,6 +117,30 @@ background-color: #ddd;
     calendarDiv.appendChild(headerCell);
   });
 
+  // Close popup handler
+  closePopupBtn.addEventListener('click', () => {
+    confirmationPopup.classList.remove('show');
+
+    // After popup dismissed, close the webview
+    // React Native WebView
+    if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+      // Optionally send final confirmation or just close
+      // Closing the webview might be done from native after receiving postMessage in some cases,
+      // but here we attempt to close the window for fallback
+      window.ReactNativeWebView.postMessage('close');
+    }
+
+    // iOS WKWebView with injected messageHandlers.close
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.close) {
+      window.webkit.messageHandlers.close.postMessage('close');
+    }
+
+    // Fallback close
+    setTimeout(() => {
+      window.close();
+    }, 50);
+  });
+
   // Add the days
   daysArray.forEach(day => {
     const dayDiv = document.createElement('div');
@@ -102,25 +164,13 @@ background-color: #ddd;
         dayDiv.className += ' enabled';
         dayDiv.textContent = day;
 
-        // Add click handler that saves date and sends message to host to close webview
+        // Add click handler that saves date, shows popup
         dayDiv.addEventListener('click', () => {
           date = (currentMonth + 1) + '/' + day + '/' + currentYear; // save selected date
 
-          // React Native WebView
-          if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-            window.ReactNativeWebView.postMessage(date);
-            return;
-          }
-
-          // iOS WKWebView with injected messageHandlers.close
-          if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.close) {
-            window.webkit.messageHandlers.close.postMessage(date);
-            return;
-          }
-
-          // Fallback: alert then try to close the window if possible
-          alert('Selected date: ' + date);
-          window.close();
+          // Set popup message and show popup
+          confirmationMessage.textContent = 'Selected date: ' + date;
+          confirmationPopup.classList.add('show');
         });
       }
     }
