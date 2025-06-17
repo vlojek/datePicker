@@ -99,16 +99,14 @@ background: #777;
   const targetMonth = candidateDate.getMonth();
   const targetDay = candidateDate.getDate();
 
-  // Build calendar for the current month only (same as before)
+  // Build calendar for the current month only
   const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth(); // 0-11 for calendar display
+  const currentMonth = today.getMonth();
 
-  // Create a Date object for the first day of calendar month (currentMonth)
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
   const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
   const totalDays = lastDayOfMonth.getDate();
 
-  // Get the day of week for the first day (0=Sunday, 6=Saturday)
   const startDay = firstDayOfMonth.getDay();
 
   const daysArray = [];
@@ -165,8 +163,14 @@ background: #777;
         dayDiv.textContent = day;
 
         dayDiv.addEventListener('click', () => {
-          date = (targetMonth + 1) + '/' + day + '/' + targetYear;
-          confirmationMessage.textContent = 'Selected date: ' + date;
+          date = new Date(targetYear, targetMonth, day);
+          // Format date as DD.MM.YYYY
+          const dayStr = String(date.getDate()).padStart(2, '0');
+          const monthStr = String(date.getMonth() + 1).padStart(2, '0');
+          const yearStr = date.getFullYear();
+          const formattedDate = `${dayStr}.${monthStr}.${yearStr}`;
+
+          confirmationMessage.textContent = 'Selected date: ' + formattedDate;
           confirmationPopup.classList.add('show');
         });
       } else {
