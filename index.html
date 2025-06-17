@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,50 +8,33 @@
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 10px;
-  }
-
-  .calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    font-size: 0.9em;
-  }
-
-  .header {
-    font-weight: bold;
-    text-align: center;
-  }
-
-  .day {
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-    text-align: center;
-    border-radius: 4px;
-    cursor: default;
-  }
-
-  .day.disabled {
-    color: #ccc;
-    cursor: not-allowed;
-  }
-
-  .day.enabled {
-    background-color: #f0f0f0;
-    cursor: pointer;
-  }
-
-  /* Optional: hover effect for enabled days */
-  .day.enabled:hover {
-    background-color: #ddd;
-  }
-</style>
-</head>
-<body>
-
-<div id="calendarContainer"></div>
-
-<script>
+  }.calendar {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 4px;
+font-size: 0.9em;
+}.header {
+font-weight: bold;
+text-align: center;
+}.day {
+width: 30px;
+height: 30px;
+line-height: 30px;
+text-align: center;
+border-radius: 4px;
+cursor: default;
+}.day.disabled {
+color: #ccc;
+cursor: not-allowed;
+}.day.enabled {
+background-color: #f0f0f0;
+cursor: pointer;
+}/* Optional: hover effect for enabled days */
+.day.enabled:hover {
+background-color: #ddd;
+}
+</style></head>
+<body><div id="calendarContainer"></div><script>
 (function() {
   const container = document.getElementById('calendarContainer');
 
@@ -119,9 +101,25 @@
         dayDiv.className += ' enabled';
         dayDiv.textContent = day;
 
-        // Optional: add click handler
+        // Add click handler that sends message to host to close webview
         dayDiv.addEventListener('click', () => {
-          alert('Selected date: ' + (currentMonth + 1) + '/' + day + '/' + currentYear);
+          const selectedDate = (currentMonth + 1) + '/' + day + '/' + currentYear;
+
+          // React Native WebView
+          if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+            window.ReactNativeWebView.postMessage(selectedDate);
+            return;
+          }
+
+          // iOS WKWebView with injected messageHandlers.close
+          if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.close) {
+            window.webkit.messageHandlers.close.postMessage(selectedDate);
+            return;
+          }
+
+          // Fallback: alert then try to close the window if possible
+          alert('Selected date: ' + selectedDate);
+          window.close();
         });
       }
     }
@@ -131,6 +129,5 @@
 
   container.appendChild(calendarDiv);
 })();
-</script>
-
-</body>
+</script></body>
+</html>
