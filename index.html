@@ -37,6 +37,7 @@ background-color: #ddd;
 <body><div id="calendarContainer"></div><script>
 (function() {
   const container = document.getElementById('calendarContainer');
+  let date = null; // variable to save selected date
 
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -101,24 +102,24 @@ background-color: #ddd;
         dayDiv.className += ' enabled';
         dayDiv.textContent = day;
 
-        // Add click handler that sends message to host to close webview
+        // Add click handler that saves date and sends message to host to close webview
         dayDiv.addEventListener('click', () => {
-          const selectedDate = (currentMonth + 1) + '/' + day + '/' + currentYear;
+          date = (currentMonth + 1) + '/' + day + '/' + currentYear; // save selected date
 
           // React Native WebView
           if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-            window.ReactNativeWebView.postMessage(selectedDate);
+            window.ReactNativeWebView.postMessage(date);
             return;
           }
 
           // iOS WKWebView with injected messageHandlers.close
           if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.close) {
-            window.webkit.messageHandlers.close.postMessage(selectedDate);
+            window.webkit.messageHandlers.close.postMessage(date);
             return;
           }
 
           // Fallback: alert then try to close the window if possible
-          alert('Selected date: ' + selectedDate);
+          alert('Selected date: ' + date);
           window.close();
         });
       }
