@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Simple Calendar - Next Week Tuesday Enabled if Today is Tuesday</title>
+<title>Simple Calendar - Two Days Ahead or Next Monday</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -80,29 +80,30 @@ background: #777;
   let date = null; // variable to save selected date
 
   const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth(); // 0-11
 
-  // Calculate the coming Tuesday (next Tuesday strictly after today)
-  function getNextTuesday(startDate) {
-    const date = new Date(startDate.getTime());
-    const day = date.getDay();
-    // Tuesday is 2 (Sun=0, Mon=1, Tue=2)
-    let daysToAdd = (2 - day + 7) % 7;
-    // If today is Tuesday (daysToAdd=0), move to next week's Tuesday (add 7 days)
-    if (daysToAdd === 0) {
-      daysToAdd = 7;
-    }
-    date.setDate(date.getDate() + daysToAdd);
-    return date;
+  // Calculate candidate date 2 days ahead
+  const candidateDate = new Date(today);
+  candidateDate.setDate(candidateDate.getDate() + 2);
+
+  // If candidate falls on Saturday (6) or Sunday (0), set to next Monday
+  const candidateDay = candidateDate.getDay();
+  if (candidateDay === 6) {
+    // Saturday -> add 2 days to Monday
+    candidateDate.setDate(candidateDate.getDate() + 2);
+  } else if (candidateDay === 0) {
+    // Sunday -> add 1 day to Monday
+    candidateDate.setDate(candidateDate.getDate() + 1);
   }
 
-  const nextTuesday = getNextTuesday(today);
-  const tuesdayDate = nextTuesday.getDate();
-  const tuesdayMonth = nextTuesday.getMonth();
-  const tuesdayYear = nextTuesday.getFullYear();
+  const targetYear = candidateDate.getFullYear();
+  const targetMonth = candidateDate.getMonth();
+  const targetDay = candidateDate.getDate();
 
-  // Create a Date object for the first day of the month
+  // Build calendar for the current month only (same as before)
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth(); // 0-11 for calendar display
+
+  // Create a Date object for the first day of calendar month (currentMonth)
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
   const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
   const totalDays = lastDayOfMonth.getDate();
@@ -110,26 +111,20 @@ background: #777;
   // Get the day of week for the first day (0=Sunday, 6=Saturday)
   const startDay = firstDayOfMonth.getDay();
 
-  // Prepare an array representing the calendar grid
   const daysArray = [];
 
-  // Fill in empty cells before the first day
   for (let i = 0; i < startDay; i++) {
     daysArray.push(null);
   }
 
-  // Fill in days of the current month
   for (let d = 1; d <= totalDays; d++) {
     daysArray.push(d);
   }
 
-  // Create header row for weekdays
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
   const calendarDiv = document.createElement('div');
   calendarDiv.className = 'calendar';
 
-  // Add weekday headers
   weekdays.forEach(day => {
     const headerCell = document.createElement('div');
     headerCell.className = 'header';
@@ -137,11 +132,10 @@ background: #777;
     calendarDiv.appendChild(headerCell);
   });
 
-  // Close popup handler
   closePopupBtn.addEventListener('click', () => {
     confirmationPopup.classList.remove('show');
 
-    // After popup dismissed, close the webview
+    // Close the webview after user dismisses confirmation
     if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
       window.ReactNativeWebView.postMessage('close');
     }
@@ -153,7 +147,6 @@ background: #777;
     }, 50);
   });
 
-  // Add the days
   daysArray.forEach(day => {
     const dayDiv = document.createElement('div');
     dayDiv.className = 'day';
@@ -161,25 +154,22 @@ background: #777;
     if (day === null) {
       dayDiv.innerHTML = '&nbsp;';
     } else {
-      // Determine if this day is the coming Tuesday of the correct month/year
-      const isTuesday =
-        day === tuesdayDate &&
-        currentMonth === tuesdayMonth &&
-        currentYear === tuesdayYear;
+      // Enable only the target day, all others booked
+      const isTargetDay =
+        day === targetDay &&
+        currentMonth === targetMonth &&
+        currentYear === targetYear;
 
-      if (isTuesday) {
+      if (isTargetDay) {
         dayDiv.className += ' enabled';
         dayDiv.textContent = day;
 
         dayDiv.addEventListener('click', () => {
-          date = (currentMonth + 1) + '/' + day + '/' + currentYear;
-
-          // Show popup message and confirm
+          date = (targetMonth + 1) + '/' + day + '/' + targetYear;
           confirmationMessage.textContent = 'Selected date: ' + date;
           confirmationPopup.classList.add('show');
         });
       } else {
-        // Everything else is booked
         dayDiv.className += ' booked';
         dayDiv.textContent = day;
       }
