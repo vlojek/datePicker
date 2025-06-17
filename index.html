@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Simple Calendar</title>
+<title>Simple Calendar - Only Coming Tuesday Enabled</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -24,9 +24,11 @@ line-height: 30px;
 text-align: center;
 border-radius: 4px;
 cursor: default;
-}.day.disabled {
+}.day.booked {
 color: #ccc;
+background-color: #e0e0e0;
 cursor: not-allowed;
+text-decoration: line-through;
 }.day.enabled {
 background-color: #f0f0f0;
 cursor: pointer;
@@ -80,7 +82,25 @@ background: #777;
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth(); // 0-11
-  const currentDay = today.getDate();
+
+  // Calculate the coming Tuesday (next Tuesday >= today)
+  function getNextTuesday(startDate) {
+    const date = new Date(startDate.getTime());
+    const day = date.getDay();
+    // Tuesday is 2 (Sun=0, Mon=1, Tue=2)
+    let daysToAdd = (2 - day + 7) % 7;
+    if (daysToAdd === 0) {
+      // If today is Tuesday, keep today as coming Tuesday
+      daysToAdd = 0;
+    }
+    date.setDate(date.getDate() + daysToAdd);
+    return date;
+  }
+
+  const nextTuesday = getNextTuesday(today);
+  const tuesdayDate = nextTuesday.getDate();
+  const tuesdayMonth = nextTuesday.getMonth();
+  const tuesdayYear = nextTuesday.getFullYear();
 
   // Create a Date object for the first day of the month
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
@@ -122,20 +142,12 @@ background: #777;
     confirmationPopup.classList.remove('show');
 
     // After popup dismissed, close the webview
-    // React Native WebView
     if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-      // Optionally send final confirmation or just close
-      // Closing the webview might be done from native after receiving postMessage in some cases,
-      // but here we attempt to close the window for fallback
       window.ReactNativeWebView.postMessage('close');
     }
-
-    // iOS WKWebView with injected messageHandlers.close
     if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.close) {
       window.webkit.messageHandlers.close.postMessage('close');
     }
-
-    // Fallback close
     setTimeout(() => {
       window.close();
     }, 50);
@@ -147,31 +159,29 @@ background: #777;
     dayDiv.className = 'day';
 
     if (day === null) {
-      // Empty cell
       dayDiv.innerHTML = '&nbsp;';
     } else {
-      // Check if this day is before today
-      if (
-        currentYear === today.getFullYear() &&
-        currentMonth === today.getMonth() &&
-        day < currentDay
-      ) {
-        // Disable days before today
-        dayDiv.className += ' disabled';
-        dayDiv.textContent = day;
-      } else {
-        // Enable current and future days
+      // Determine if this day is the coming Tuesday of the correct month/year
+      const isTuesday =
+        day === tuesdayDate &&
+        currentMonth === tuesdayMonth &&
+        currentYear === tuesdayYear;
+
+      if (isTuesday) {
         dayDiv.className += ' enabled';
         dayDiv.textContent = day;
 
-        // Add click handler that saves date, shows popup
         dayDiv.addEventListener('click', () => {
-          date = (currentMonth + 1) + '/' + day + '/' + currentYear; // save selected date
+          date = (currentMonth + 1) + '/' + day + '/' + currentYear;
 
-          // Set popup message and show popup
+          // Show popup message and confirm
           confirmationMessage.textContent = 'Selected date: ' + date;
           confirmationPopup.classList.add('show');
         });
+      } else {
+        // Everything else is booked
+        dayDiv.className += ' booked';
+        dayDiv.textContent = day;
       }
     }
 
