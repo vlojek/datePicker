@@ -78,12 +78,12 @@
     box-shadow: 0 0 10px #66bef7;
     color: #005fa3;
   }
-  /* Back button styled to blend */
+  /* Back button styled as arrow only */
   #backToDateBtn {
     display: block;
     margin: 0 auto 15px auto;
     padding: 8px 16px;
-    font-size: 1em;
+    font-size: 1.2em;
     cursor: pointer;
     border-radius: 6px;
     border: 1.5px solid #0077cc;
@@ -91,7 +91,10 @@
     color: #0077cc;
     font-weight: 600;
     transition: background-color 0.2s ease, color 0.2s ease;
-    max-width: 140px;
+    max-width: 56px;
+    line-height: 1;
+    text-align: center;
+    user-select: none;
   }
   #backToDateBtn:hover {
     background-color: #0077cc;
@@ -150,7 +153,7 @@
     <h2>Select Date</h2>
   </div>
   <div id="timeSlotsContainer" style="display:none;">
-    <button id="backToDateBtn">&larr; Back to Date Selection</button>
+    <button id="backToDateBtn" aria-label="Back">&#8592;</button>
     <h2>Select Time</h2>
     <div id="timeSlots" class="time-slots"></div>
   </div>
