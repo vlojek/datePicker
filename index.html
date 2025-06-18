@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,75 +10,122 @@
     margin: 0;
     padding: 10px;
     position: relative;
-  }.calendar {
-display: grid;
-grid-template-columns: repeat(7, 1fr);
-gap: 4px;
-font-size: 0.9em;
-}.header {
-font-weight: bold;
-text-align: center;
-}.day {
-width: 30px;
-height: 30px;
-line-height: 30px;
-text-align: center;
-border-radius: 4px;
-cursor: default;
-}.day.booked {
-color: #ccc;
-background-color: #e0e0e0;
-cursor: not-allowed;
-text-decoration: line-through;
-}.day.enabled {
-background-color: #f0f0f0;
-cursor: pointer;
-}/* Optional: hover effect for enabled days */
-.day.enabled:hover {
-background-color: #ddd;
-}/* Confirmation popup style */
-#confirmationPopup {
-position: fixed;
-bottom: 20px;
-left: 50%;
-transform: translateX(-50%);
-background-color: #333;
-color: white;
-padding: 10px 15px;
-border-radius: 6px;
-font-size: 0.9em;
-opacity: 0;
-pointer-events: none;
-transition: opacity 0.3s ease;
-z-index: 9999;
-display: flex;
-align-items: center;
-gap: 10px;
-}#confirmationPopup.show {
-opacity: 1;
-pointer-events: auto;
-}#confirmationPopup button {
-background: #555;
-color: white;
-border: none;
-border-radius: 4px;
-padding: 4px 8px;
-cursor: pointer;
-font-size: 0.85em;
-}#confirmationPopup button:hover {
-background: #777;
-}
-</style></head>
-<body><div id="calendarContainer"></div><!-- Confirmation popup --><div id="confirmationPopup">
-  <span id="confirmationMessage"></span>
-  <button id="closePopupBtn">OK</button>
-</div><script>
+  }
+  .calendar, .time-slots {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    font-size: 0.9em;
+  }
+  .header {
+    font-weight: bold;
+    text-align: center;
+  }
+  .day, .time-slot {
+    width: 60px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border-radius: 4px;
+    cursor: default;
+    user-select: none;
+  }
+  .day.booked, .time-slot.booked {
+    color: #ccc;
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+  .day.enabled, .time-slot.enabled {
+    background-color: #f0f0f0;
+    cursor: pointer;
+  }
+  /* Optional: hover effect for enabled days and time slots */
+  .day.enabled:hover, .time-slot.enabled:hover {
+    background-color: #ddd;
+  }
+  /* Confirmation popup style */
+  #confirmationPopup {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 90vw;
+    word-break: break-word;
+  }
+  #confirmationPopup.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #confirmationPopup button {
+    background: #555;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.85em;
+  }
+  #confirmationPopup button:hover {
+    background: #777;
+  }
+  /* Back button for time selection page */
+  #backToDateBtn {
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #fafafa;
+    transition: background-color 0.2s ease;
+  }
+  #backToDateBtn:hover {
+    background-color: #eee;
+  }
+  /* Time slots container styling for fewer columns */
+  .time-slots {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 280px;
+  }
+</style>
+</head>
+<body>
+  <div id="calendarContainer"></div>
+  <div id="timeSlotsContainer" style="display:none;">
+    <button id="backToDateBtn">&larr; Back to Date Selection</button>
+    <div id="timeSlots" class="time-slots"></div>
+  </div>
+
+  <!-- Confirmation popup -->
+  <div id="confirmationPopup">
+    <span id="confirmationMessage"></span>
+    <button id="closePopupBtn">OK</button>
+  </div>
+
+<script>
 (function() {
-  const container = document.getElementById('calendarContainer');
+  const calendarContainer = document.getElementById('calendarContainer');
+  const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+  const timeSlotsDiv = document.getElementById('timeSlots');
+  const backToDateBtn = document.getElementById('backToDateBtn');
   const confirmationPopup = document.getElementById('confirmationPopup');
   const confirmationMessage = document.getElementById('confirmationMessage');
   const closePopupBtn = document.getElementById('closePopupBtn');
-  let date = null; // variable to save selected date
+
+  let selectedDate = null;
 
   const today = new Date();
 
@@ -130,6 +178,13 @@ background: #777;
     calendarDiv.appendChild(headerCell);
   });
 
+  calendarContainer.appendChild(calendarDiv);
+
+  function showConfirmation(message) {
+    confirmationMessage.textContent = message;
+    confirmationPopup.classList.add('show');
+  }
+
   closePopupBtn.addEventListener('click', () => {
     confirmationPopup.classList.remove('show');
 
@@ -145,6 +200,7 @@ background: #777;
     }, 50);
   });
 
+  // Render days
   daysArray.forEach(day => {
     const dayDiv = document.createElement('div');
     dayDiv.className = 'day';
@@ -159,22 +215,18 @@ background: #777;
         currentYear === targetYear;
 
       if (isTargetDay) {
-        dayDiv.className += ' enabled';
+        dayDiv.classList.add('enabled');
         dayDiv.textContent = day;
 
         dayDiv.addEventListener('click', () => {
-          date = new Date(targetYear, targetMonth, day);
-          // Format date as DD.MM.YYYY
-          const dayStr = String(date.getDate()).padStart(2, '0');
-          const monthStr = String(date.getMonth() + 1).padStart(2, '0');
-          const yearStr = date.getFullYear();
-          const formattedDate = `${dayStr}.${monthStr}.${yearStr}`;
-
-          confirmationMessage.textContent = 'Selected date: ' + formattedDate;
-          confirmationPopup.classList.add('show');
+          selectedDate = new Date(targetYear, targetMonth, day);
+          // Hide calendar, show time slots page
+          calendarContainer.style.display = 'none';
+          timeSlotsContainer.style.display = 'block';
+          renderTimeSlots();
         });
       } else {
-        dayDiv.className += ' booked';
+        dayDiv.classList.add('booked');
         dayDiv.textContent = day;
       }
     }
@@ -182,7 +234,56 @@ background: #777;
     calendarDiv.appendChild(dayDiv);
   });
 
-  container.appendChild(calendarDiv);
+  backToDateBtn.addEventListener('click', () => {
+    // Back to calendar selection
+    timeSlotsContainer.style.display = 'none';
+    calendarContainer.style.display = 'block';
+  });
+
+  function renderTimeSlots() {
+    timeSlotsDiv.innerHTML = ''; // clear previous slots
+
+    // We generate slots from 10:00 to 18:00 — half-hour increments
+    // Only 14:30 is enabled
+    const startHour = 10;
+    const endHour = 18;
+
+    for (let hour = startHour; hour <= endHour; hour++) {
+      // Full hour slot (e.g., 10:00, 11:00 ...)
+      let timeStr = `${hour.toString().padStart(2, '0')}:00`;
+      createTimeSlotDiv(timeStr, false); // disabled
+
+      // Half hour slot only showing 14:30 enabled
+      if (hour < endHour) { // skip after 18:00
+        timeStr = `${hour.toString().padStart(2, '0')}:30`;
+        // Enabled only if 14:30
+        const isEnabled = timeStr === '14:30';
+        createTimeSlotDiv(timeStr, isEnabled);
+      }
+    }
+  }
+
+  function createTimeSlotDiv(timeStr, enabled) {
+    const slotDiv = document.createElement('div');
+    slotDiv.classList.add('time-slot');
+    slotDiv.textContent = timeStr;
+    if (enabled) {
+      slotDiv.classList.add('enabled');
+      slotDiv.title = 'Click to select this time';
+      slotDiv.addEventListener('click', () => {
+        // On time selected: show confirmation popup with full datetime
+        const dayStr = String(selectedDate.getDate()).padStart(2, '0');
+        const monthStr = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const yearStr = selectedDate.getFullYear();
+        showConfirmation(`Selected date & time: ${dayStr}.${monthStr}.${yearStr} ${timeStr}`);
+      });
+    } else {
+      slotDiv.classList.add('booked');
+      slotDiv.title = 'Not available';
+    }
+    timeSlotsDiv.appendChild(slotDiv);
+  }
 })();
-</script></body>
+</script>
+</body>
 </html>
