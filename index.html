@@ -37,7 +37,7 @@
   /* Grid for time slots */
   .time-slots {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 8px;
     font-size: 0.95em;
   }
@@ -100,7 +100,7 @@
     background-color: #0077cc;
     color: white;
   }
-  /* Confirmation popup style - centered, wider */
+  /* Confirmation popup style - centered, wider with absolute width */
   #confirmationPopup {
     position: fixed;
     top: 50%;
@@ -108,7 +108,7 @@
     transform: translate(-50%, -50%);
     background-color: #222e3a;
     color: white;
-    padding: 22px 32px;
+    padding: 24px 36px;
     border-radius: 10px;
     font-size: 1em;
     opacity: 0;
@@ -119,11 +119,13 @@
     flex-direction: column;
     align-items: center;
     gap: 18px;
-    max-width: 320px;
+    width: 360px;
+    max-width: 90vw;
     box-shadow: 0 8px 20px rgba(0,0,0,0.35);
     white-space: pre-line;
     text-align: center;
     line-height: 1.4;
+    word-wrap: break-word;
   }
   #confirmationPopup.show {
     opacity: 1;
@@ -188,10 +190,8 @@
   // If candidate falls on Saturday (6) or Sunday (0), set to next Monday
   const candidateDay = candidateDate.getDay();
   if (candidateDay === 6) {
-    // Saturday -> add 2 days to Monday
     candidateDate.setDate(candidateDate.getDate() + 2);
   } else if (candidateDay === 0) {
-    // Sunday -> add 1 day to Monday
     candidateDate.setDate(candidateDate.getDate() + 1);
   }
 
@@ -199,7 +199,6 @@
   const targetMonth = candidateDate.getMonth();
   const targetDay = candidateDate.getDate();
 
-  // Build calendar for the current month only
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
 
@@ -233,7 +232,6 @@
   calendarContainer.appendChild(calendarDiv);
 
   function showConfirmation(message) {
-    // Keep a space line between date/time and "You can close this window."
     confirmationMessage.textContent = `You have selected\n${message}\n\nYou can close this window.`;
     confirmationPopup.classList.add('show');
   }
@@ -241,7 +239,6 @@
   closePopupBtn.addEventListener('click', () => {
     confirmationPopup.classList.remove('show');
 
-    // Close the webview after user dismisses confirmation
     if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
       window.ReactNativeWebView.postMessage('close');
     }
@@ -253,7 +250,6 @@
     }, 50);
   });
 
-  // Render days
   daysArray.forEach(day => {
     const dayDiv = document.createElement('div');
     dayDiv.className = 'day';
@@ -261,11 +257,7 @@
     if (day === null) {
       dayDiv.innerHTML = '&nbsp;';
     } else {
-      // Enable only the target day, all others booked
-      const isTargetDay =
-        day === targetDay &&
-        currentMonth === targetMonth &&
-        currentYear === targetYear;
+      const isTargetDay = day === targetDay && currentMonth === targetMonth && currentYear === targetYear;
 
       if (isTargetDay) {
         dayDiv.classList.add('enabled');
@@ -273,7 +265,6 @@
 
         dayDiv.addEventListener('click', () => {
           selectedDate = new Date(targetYear, targetMonth, day);
-          // Hide calendar, show time slots page
           calendarContainer.style.display = 'none';
           timeSlotsContainer.style.display = 'block';
           renderTimeSlots();
@@ -288,30 +279,34 @@
   });
 
   backToDateBtn.addEventListener('click', () => {
-    // Back to calendar selection
     timeSlotsContainer.style.display = 'none';
     calendarContainer.style.display = 'block';
   });
 
   function renderTimeSlots() {
-    timeSlotsDiv.innerHTML = ''; // clear previous slots
+    timeSlotsDiv.innerHTML = '';
 
-    // We generate slots from 10:00 to 18:00 — half-hour increments
-    // Only 14:30 is enabled
-    const startHour = 10;
+    const startHour = 8;
     const endHour = 18;
 
     for (let hour = startHour; hour <= endHour; hour++) {
-      // Full hour slot (e.g., 10:00, 11:00 ...)
-      let timeStr = `${hour.toString().padStart(2, '0')}:00`;
-      createTimeSlotDiv(timeStr, false); // disabled
+      // 30-minute slots: :00 and :30 except last hour only :00
+      if (hour === startHour) {
+        // For 8:00, only 8:30 slot visible (as per user last request 8:30 only)
+        createTimeSlotDiv('08:30', false);
+      } else if (hour === 9) {
+        createTimeSlotDiv('09:00', false);
+        createTimeSlotDiv('09:30', false);
+      } else {
+        // Normal hourly slots disabled by default
+        const timeStrFullHour = `${hour.toString().padStart(2, '0')}:00`;
+        createTimeSlotDiv(timeStrFullHour, false);
 
-      // Half hour slot only showing 14:30 enabled
-      if (hour < endHour) { // skip after 18:00
-        timeStr = `${hour.toString().padStart(2, '0')}:30`;
-        // Enabled only if 14:30
-        const isEnabled = timeStr === '14:30';
-        createTimeSlotDiv(timeStr, isEnabled);
+        if (hour < endHour) {
+          const timeStrHalf = `${hour.toString().padStart(2, '0')}:30`;
+          const isEnabled = timeStrHalf === '14:30';
+          createTimeSlotDiv(timeStrHalf, isEnabled);
+        }
       }
     }
   }
@@ -324,7 +319,6 @@
       slotDiv.classList.add('enabled');
       slotDiv.title = 'Click to select this time';
       slotDiv.addEventListener('click', () => {
-        // On time selected: show confirmation popup with full datetime
         const dayStr = String(selectedDate.getDate()).padStart(2, '0');
         const monthStr = String(selectedDate.getMonth() + 1).padStart(2, '0');
         const yearStr = selectedDate.getFullYear();
