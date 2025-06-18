@@ -100,7 +100,7 @@
     background-color: #0077cc;
     color: white;
   }
-  /* Confirmation popup style - centered */
+  /* Confirmation popup style - centered, wider */
   #confirmationPopup {
     position: fixed;
     top: 50%;
@@ -108,7 +108,7 @@
     transform: translate(-50%, -50%);
     background-color: #222e3a;
     color: white;
-    padding: 20px 28px;
+    padding: 22px 32px;
     border-radius: 10px;
     font-size: 1em;
     opacity: 0;
@@ -118,8 +118,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    max-width: 90vw;
+    gap: 18px;
+    max-width: 320px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.35);
     white-space: pre-line;
     text-align: center;
@@ -129,7 +129,10 @@
     opacity: 1;
     pointer-events: auto;
   }
-  #confirmationPopup button {
+  #confirmationMessage {
+    white-space: pre-line;
+  }
+  #closePopupBtn {
     background: #0077cc;
     color: white;
     border: none;
@@ -142,7 +145,7 @@
     transition: background-color 0.25s ease;
     min-width: 100px;
   }
-  #confirmationPopup button:hover {
+  #closePopupBtn:hover {
     background: #005fa3;
     box-shadow: 0 5px 12px rgba(0,95,163,0.75);
   }
@@ -230,7 +233,7 @@
   calendarContainer.appendChild(calendarDiv);
 
   function showConfirmation(message) {
-    // Shortened confirmation text with "You have selected"
+    // Keep a space line between date/time and "You can close this window."
     confirmationMessage.textContent = `You have selected\n${message}\n\nYou can close this window.`;
     confirmationPopup.classList.add('show');
   }
